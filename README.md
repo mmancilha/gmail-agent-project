@@ -85,3 +85,12 @@ The application will be available at http://127.0.0.1:8000.
 Once the server is running, you can access the interactive API documentation (Swagger UI) at:
 
 http://127.0.0.1:8000/docs
+
+## Deployment
+This application is deployed on Render.
+
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
+
+The live version of this API can be accessed at: 
+**[https://gmail-agent-project.onrender.com/docs](https://gmail-agent-project.onrender.com/docs)**
