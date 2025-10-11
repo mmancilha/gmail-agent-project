@@ -1,0 +1,13 @@
+Virtual Environment
+venv/
+__pycache__/
+
+Database file
+agents.db
+
+Environment variables
+.env
+
+IDE specific
+.idea/
+.vscode/
