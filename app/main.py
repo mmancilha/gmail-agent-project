@@ -164,19 +164,16 @@ def auto_reply_to_emails(agent_id: int, db: Session = Depends(get_db)):
 
     replies_sent_count = 0
     for email in unread_emails:
-        # Generate the reply text with AI
         reply_text = openai_service.generate_reply_text(
             original_sender=email["sender"],
             original_subject=email["subject"],
             original_content=email["content"]
         )
 
-        # --- NEW LOGIC: Check if the AI decided to ignore the email ---
         if reply_text.strip().upper() == "IGNORE":
             print(f"AI decided to ignore promotional email from: {email['sender']}")
-            continue # Skip to the next email
+            continue
 
-        # Send the reply
         gmail_service.send_reply(
             service=gmail_service_instance,
             original_message=email["full_message"],
@@ -188,6 +185,48 @@ def auto_reply_to_emails(agent_id: int, db: Session = Depends(get_db)):
         "status": "Success",
         "message": f"Processed {len(unread_emails)} emails and sent {replies_sent_count} replies.",
         "replies_sent": replies_sent_count
+    }
+
+# --- NEW ENDPOINT FOR 'Send Email' ---
+@app.post(
+    "/agents/{agent_id}/emails/send",
+    response_model=schemas.SendEmailResponse,
+    tags=["Email Actions"]
+)
+def send_one_click_email(
+    agent_id: int,
+    request_body: schemas.SendEmailRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Sends a single, simple email from the agent's account.
+    All inputs (recipient, subject, body) are provided by the user.
+    """
+    # 1. Get Agent and connect to Gmail
+    db_agent = crud.get_agent(db, agent_id=agent_id)
+    if db_agent is None:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    credentials_info = crud.get_decrypted_credentials(db_agent=db_agent)
+    gmail_service_instance = gmail_service.get_gmail_service(credentials_info)
+    if gmail_service_instance is None:
+        raise HTTPException(status_code=500, detail="Could not connect to Gmail service.")
+
+    # 2. Send the email using the provided inputs
+    sent_message = gmail_service.send_email(
+        service=gmail_service_instance,
+        to=request_body.recipient_email,
+        subject=request_body.subject,
+        body=request_body.body
+    )
+
+    if sent_message is None:
+        raise HTTPException(status_code=500, detail="Failed to send email.")
+
+    return {
+        "status": "success",
+        "message": f"Email successfully sent with Message ID: {sent_message.get('id')}",
+        "sent_to": request_body.recipient_email
     }
 
 @app.get("/", tags=["Root"])
