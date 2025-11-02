@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import List
 
-# Schema for receiving data when creating an agent
 class AgentCreate(BaseModel):
     name: str = Field(
         ..., 
@@ -28,24 +28,19 @@ class AgentCreate(BaseModel):
         example="1//AbCdEfGhIjKlMnOpQrStUvWxYz"
     )
 
-# Schema for returning data (without exposing secrets)
 class AgentResponse(BaseModel):
     id: int
     name: str
     email_gmail: EmailStr
 
     class Config:
-        orm_mode = True
-    
-# --- Adicione as novas classes abaixo ---
+        from_attributes = True
 
-# Schema para a resposta da leitura de e-mails
 class EmailResponse(BaseModel):
     sender: str
     subject: str
     content: str
 
-# Schema para o pedido de resumir e encaminhar
 class SummarizeForwardRequest(BaseModel):
     recipient_email: EmailStr = Field(
         ...,
@@ -53,10 +48,15 @@ class SummarizeForwardRequest(BaseModel):
         example="manager@example.com"
     )
 
-# Schema para a resposta de sucesso
 class SummarizeForwardResponse(BaseModel):
     status: str
     message: str
     forwarded_to: EmailStr
     summaries_sent: int
+
+# --- NEW SCHEMA ---
+class AutoReplyResponse(BaseModel):
+    status: str
+    message: str
+    replies_sent: int
 
