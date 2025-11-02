@@ -1,88 +1,117 @@
-# AI Agent with Gmail API
-This project is a backend service developed with FastAPI that allows registering AI agents to interact with the Gmail API. The service handles secure storage of credentials and provides endpoints for managing emails.
+# AI Agent with Gmail API 🚀
+FastAPI backend to register and operate AI agents that interact with the Gmail API. The service securely stores credentials, reads emails, summarizes content using AI, and can automatically reply based on intent and sentiment.
 
-## Project Structure
-/gmail_agent_project
+The goal is a simple, secure, production-ready API for tasks like reading received emails, summarization and forwarding, intelligent auto-reply, and agent management.
+
+## 🧩 Project Structure
 ```text
-/gmail_agent_project
-├── /app
+gmail-agent-project
+├── app/
 │   ├── __init__.py
 │   ├── crud.py
 │   ├── database.py
+│   ├── gmail_service.py
 │   ├── main.py
 │   ├── models.py
+│   ├── openai_service.py
 │   ├── schemas.py
 │   └── security.py
-├── .env
-├── requirements.txt
-└── README.md
+├── README.md
+└── requirements.txt
 ```
 
-## Features (Deliverable 1)
-- Agent Registration: Securely register new AI agents via a POST request.
+## ⚙️ Requirements
+- Python 3.10+ (recommended)
+- `pip` and `venv`
+- Gmail OAuth 2.0 credentials (Client ID/Secret + Refresh Token)
+- `OPENAI_API_KEY` (required for AI features)
 
-- Credential Encryption: All sensitive credentials (client_id, client_secret, refresh_token) are encrypted before being stored in the database.
+## 🔧 Installation & Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/mmancilha/gmail-agent-project.git
+   cd gmail-agent-project
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   # Windows
+   .\venv\Scripts\activate
+   # macOS/Linux
+   source venv/bin/activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Configure the `.env` file at project root:
+   ```env
+   # Database (SQLite by default)
+   DATABASE_URL="sqlite:///./agents.db"
 
-- Automatic API Documentation: Interactive API documentation available at /docs.
+   # Generate a new key for encryption (Fernet)
+   # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   FERNET_KEY="YOUR_FERNET_KEY"
 
-## Prerequisites
-- Python 3.8+
+   # OpenAI for summarization/replies
+   OPENAI_API_KEY="your_openai_key"
+   ```
+5. Obtain a Gmail Refresh Token (OAuth):
+   ```bash
+   # Use the local flow to generate a token
+   python app/get_refresh_token.py
+   ```
+   Copy the generated `refresh_token` — it will be used when registering the agent via API.
+6. Run the server:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+   The API will be available at `http://127.0.0.1:8000` (docs: `/docs`).
 
-- A virtual environment tool (like venv)
+## 🧪 Basic Usage
+Core endpoints (see `/docs` for details):
 
-## Setup and Installation
-### Clone the repository:
-```bash
-git clone https://github.com/mmancilha/gmail-agent-project.git
-cd gmail-agent-project
-```
+- Register agent
+  ```bash
+  curl -X POST http://127.0.0.1:8000/agents/ \
+    -H "Content-Type: application/json" \
+    -d '{
+      "name": "Sales AI Agent",
+      "email_gmail": "your.email@gmail.com",
+      "client_id": "<CLIENT_ID>",
+      "client_secret": "<CLIENT_SECRET>",
+      "refresh_token": "<REFRESH_TOKEN>"
+    }'
+  ```
 
-### Create and activate a virtual environment:
-```bash
-# Create the environment
-python -m venv venv
+- Read unread emails (primary inbox)
+  ```bash
+  curl http://127.0.0.1:8000/agents/<AGENT_ID>/emails/
+  ```
 
-# Activate on Windows
-.\venv\Scripts\activate
+- Auto-reply with sentiment analysis
+  ```bash
+  curl -X POST http://127.0.0.1:8000/agents/<AGENT_ID>/emails/auto-reply
+  ```
 
-# Activate on macOS/Linux
-source venv/bin/activate
-```
+- Summarize and forward
+  ```bash
+  curl -X POST http://127.0.0.1:8000/agents/<AGENT_ID>/emails/summarize-and-forward \
+    -H "Content-Type: application/json" \
+    -d '{"recipient_email": "manager@example.com"}'
+  ```
 
-### Install the dependencies:
-```bash
-pip install -r requirements.txt
-```
+Useful links:
+- FastAPI Docs: https://fastapi.tiangolo.com
+- Gmail API: https://developers.google.com/gmail/api
+- OpenAI API: https://platform.openai.com/docs
 
-### Configure environment variables:
-Create a file named .env in the project root by copying the example below.
+## 🚀 Deployment
+Application available on Render:
 
-```env
-# .env
-DATABASE_URL="sqlite:///./agents.db"
+Live URL: **https://gmail-agent-project.onrender.com/docs**
 
-# To generate a new key, run in your terminal:
-# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-FERNET_KEY="YOUR_NEWLY_GENERATED_KEY_HERE"
-```
+> Note: On the free tier, the service may hibernate due to inactivity. If it takes time to start, wait ~30–60s and refresh the page.
 
-## How to Run the Application
-With the virtual environment activated, run the following command from the root directory (gmail_agent_project):
-
-```bash
-uvicorn app.main:app --reload
-```
-
-The application will be available at http://127.0.0.1:8000.
-
-## API Documentation
-Once the server is running, you can access the interactive API documentation (Swagger UI) at:
-
-http://127.0.0.1:8000/docs
-
-## Deployment
-This application is deployed on Render.
-
-Live URL: **[https://gmail-agent-project.onrender.com/docs](https://gmail-agent-project.onrender.com/docs)**
-
-> Note: This application is hosted on Render's free tier. The service may "spin down" due to inactivity. If the link does not load immediately, please wait 30-60 seconds for the server to restart and then refresh the page.
+---
+Made with FastAPI, SQLAlchemy, OpenAI and Gmail API. ✨
